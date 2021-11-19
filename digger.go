@@ -9,15 +9,20 @@ import (
 )
 
 func main() {
-	fmt.Println("Hello, World!")
+	ctx := context.Background()
 	client := github.NewClient(nil)
 
-	// list all organizations for user "willnorris"
-	orgs, _, err := client.Organizations.List(context.Background(), "willnorris", nil)
+	opts := &github.SearchOptions{Sort: "created", Order: "asc"}
+	query := "deadlock is:issue language:rust"
+	issues, _, err := client.Search.Issues(ctx, query, opts)
 	if err != nil {
 		log.Println(err)
 	}
-	for _, org := range orgs {
-		fmt.Println(*org)
+	fmt.Printf("%d issues found\n", issues.GetTotal())
+	if issues.GetIncompleteResults() {
+		fmt.Println("Results are incomplete!")
+	}
+	for _, issue := range issues.Issues {
+		fmt.Printf("%s => %s\n", issue.GetHTMLURL(), issue.GetTitle())
 	}
 }
