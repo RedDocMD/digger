@@ -4,13 +4,23 @@ import (
 	"context"
 	"fmt"
 	"log"
+	"os"
 
 	"github.com/google/go-github/v40/github"
+	"golang.org/x/oauth2"
 )
 
 func main() {
 	ctx := context.Background()
-	client := github.NewClient(nil)
+	token, found := os.LookupEnv("GITHUB_TOKEN")
+	if !found {
+		log.Fatalln("Expected GITHUB_TOKEN environment variable")
+	}
+	ts := oauth2.StaticTokenSource(
+		&oauth2.Token{AccessToken: token},
+	)
+	tc := oauth2.NewClient(ctx, ts)
+	client := github.NewClient(tc)
 
 	githubSearchApi(ctx, client)
 }
