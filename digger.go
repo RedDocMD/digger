@@ -2,7 +2,10 @@ package main
 
 import (
 	"context"
+	"encoding/json"
 	"fmt"
+	"io/fs"
+	"io/ioutil"
 	"log"
 	"os"
 
@@ -11,6 +14,11 @@ import (
 )
 
 func main() {
+	args := os.Args
+	if len(args) != 2 {
+		log.Fatalln("Expected 1 arg: <outfilename>")
+	}
+
 	ctx := context.Background()
 	token, found := os.LookupEnv("GITHUB_TOKEN")
 	if !found {
@@ -28,6 +36,16 @@ func main() {
 	}
 	for _, issue := range allIssues {
 		fmt.Printf("%s => %s\n", issue.GetHTMLURL(), issue.GetTitle())
+	}
+
+	outFileName := os.Args[1]
+	issueJson, err := json.MarshalIndent(allIssues, "", "  ")
+	if err != nil {
+		log.Fatalln(err)
+	}
+	err = ioutil.WriteFile(outFileName, issueJson, fs.ModePerm)
+	if err != nil {
+		log.Fatalln(err)
 	}
 }
 
