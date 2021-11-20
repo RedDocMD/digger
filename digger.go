@@ -22,23 +22,45 @@ func main() {
 	tc := oauth2.NewClient(ctx, ts)
 	client := github.NewClient(tc)
 
-	githubSearchApi(ctx, client)
-}
-
-func githubSearchApi(ctx context.Context, client *github.Client) {
-	opts := &github.SearchOptions{Sort: "created", Order: "desc"}
-	query := "deadlock is:issue language:rust"
-	issues, _, err := client.Search.Issues(ctx, query, opts)
+	allIssues, err := githubSearchApi(ctx, client)
 	if err != nil {
-		log.Println(err)
-		return
+		log.Fatalln(err)
 	}
-	fmt.Println("Query => ", query)
-	fmt.Printf("%d issues found\n", issues.GetTotal())
-	if issues.GetIncompleteResults() {
-		fmt.Println("Results are incomplete!")
-	}
-	for _, issue := range issues.Issues {
+	for _, issue := range allIssues {
 		fmt.Printf("%s => %s\n", issue.GetHTMLURL(), issue.GetTitle())
 	}
+}
+
+func githubSearchApi(ctx context.Context, client *github.Client) ([]*github.Issue, error) {
+	opts := &github.SearchOptions{
+		Sort:  "created",
+		Order: "desc",
+		ListOptions: github.ListOptions{
+			PerPage: 100,
+			Page:    1,
+		},
+	}
+	query := "deadlock is:issue language:rust"
+	fmt.Println("Query => ", query)
+
+	var allIssues []*github.Issue
+	for {
+		issues, resp, err := client.Search.Issues(ctx, query, opts)
+		if err != nil {
+			return nil, err
+		}
+		if opts.Page == 1 {
+			fmt.Printf("%d issues found\n", issues.GetTotal())
+		}
+		if issues.GetIncompleteResults() {
+			fmt.Println("Results are incomplete!")
+		}
+		fmt.Printf("Fetched page %d with %d results\n", opts.Page, len(issues.Issues))
+		allIssues = append(allIssues, issues.Issues...)
+		if resp.NextPage == 0 {
+			break
+		}
+		opts.Page = resp.NextPage
+	}
+	return allIssues, nil
 }
