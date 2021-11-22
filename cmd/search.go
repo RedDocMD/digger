@@ -15,6 +15,7 @@ import (
 var pr bool
 var outFileName string
 var verboseSearch bool
+var ascIssuesOrder bool
 
 var searchCmd = &cobra.Command{
 	Use:   "search QUERY",
@@ -32,7 +33,7 @@ var searchCmd = &cobra.Command{
 		client := github.NewClient(tp.Client())
 
 		query := args[0]
-		allIssues, err := githubSearchRust(ctx, client, query, pr)
+		allIssues, err := githubSearchRust(ctx, client, query)
 		if err != nil {
 			return err
 		}
@@ -63,19 +64,26 @@ func initSearchCmd() {
 	searchCmd.Flags().BoolVar(&pr, "pr", false, "search for pull-requests instead of issues")
 	searchCmd.Flags().StringVarP(&outFileName, "output", "o", "", "file to dump search results to (JSON)")
 	searchCmd.Flags().BoolVarP(&verboseSearch, "verbose", "v", false, "print verbose output")
+	searchCmd.Flags().BoolVar(&ascIssuesOrder, "asc", false, "order searches in ascending order of date")
 }
 
-func githubSearchRust(ctx context.Context, client *github.Client, query string, queryPr bool) ([]*github.Issue, error) {
+func githubSearchRust(ctx context.Context, client *github.Client, query string) ([]*github.Issue, error) {
+	var order string
+	if ascIssuesOrder {
+		order = "asc"
+	} else {
+		order = "desc"
+	}
 	opts := &github.SearchOptions{
 		Sort:  "created",
-		Order: "desc",
+		Order: order,
 		ListOptions: github.ListOptions{
 			PerPage: 100,
 			Page:    1,
 		},
 	}
 	var queryString string
-	if !queryPr {
+	if !pr {
 		queryString = fmt.Sprintf("%s is:issue language:rust", query)
 	} else {
 		queryString = fmt.Sprintf("%s is:pull-request language:rust", query)
