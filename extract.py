@@ -42,10 +42,10 @@ if __name__ == "__main__":
                 if not item_id in done_ids:
                     done_ids[item_id] = True
                     results.append(item)
-    print(f"{len(results)} results found")
+    print("{} results found".format(colored(str(len(results)), 'red', attrs=['bold'])))
     all_issues = map(make_issue, results)
     imp_issues = list(filter(important_issue_criteria, all_issues))
     imp_issues.sort(key=lambda issue: issue.ctime, reverse=True)
-    print(f"{len(imp_issues)} important issues found")
+    print("{} important issues found".format(colored(str(len(imp_issues)), 'red', attrs=['bold'])))
     for issue in imp_issues:
         print(str(issue))
