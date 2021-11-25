@@ -50,7 +50,7 @@ var searchCmd = &cobra.Command{
 			if err != nil {
 				return err
 			}
-			err = ioutil.WriteFile(outFileName, issueJson, fs.ModePerm)
+			err = ioutil.WriteFile(outFileName, issueJson, 0644)
 			if err != nil {
 				return err
 			}
