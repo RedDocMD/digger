@@ -23,7 +23,7 @@ def make_issue(result):
     ctime_str = result["created_at"]
     time_format = "%Y-%m-%dT%H:%M:%SZ"
     ctime = time.strptime(ctime_str, time_format)
-    return Issue(result["id"], result["url"], result["title"], ctime)
+    return Issue(result["id"], result["html_url"], result["title"], ctime)
 
 
 def important_issue_criteria(issue):
